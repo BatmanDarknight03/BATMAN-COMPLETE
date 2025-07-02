@@ -12,6 +12,6 @@ function abrirVistaEspecial(tipo) {
   // Función para mostrar el QR (si tienes una URL fija asociada al código QR)
   function mostrarQR() {
     // Cambia esta URL por la que apunta tu QR real
-    window.open("https://tusitio.com/index.html", "_blank");
+    window.open("https://batmandarknight03.github.io/BATMAN-COMPLETE/", "_blank");
   }
   
