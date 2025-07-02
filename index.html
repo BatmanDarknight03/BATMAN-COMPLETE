@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lic. Shaira - Psicología & Batman</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(#000000, #1a1a1a);
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: #111;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      color: #fdd835;
+      font-weight: bold;
+      border-bottom: 2px solid #444;
+    }
+
+    .center {
+      text-align: center;
+      margin-top: 40px;
+      padding: 0 15px;
+    }
+
+    #batman-logo {
+      width: 180px;
+      max-width: 80%;
+      animation: floatLogo 3s ease-in-out infinite;
+    }
+
+    @keyframes floatLogo {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    .button {
+      margin: 10px;
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #fdd835;
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      animation: pulse 2s infinite;
+      transition: background 0.3s, transform 0.2s;
+      display: inline-block;
+      width: auto;
+    }
+
+    .button:hover {
+      background-color: #fff176;
+      transform: scale(1.05);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    .character {
+      position: absolute;
+      bottom: 0;
+      width: 150px;
+      max-width: 40vw;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 0;
+      transition: transform 1.5s ease-out, opacity 1s;
+    }
+
+    #batman {
+      left: 10px;
+      transform: translateX(-250px);
+    }
+
+    #catwoman {
+      right: 10px;
+      transform: translateX(250px);
+    }
+
+    .show-batman #batman {
+      transform: translateX(0);
+      opacity: 0.7;
+    }
+
+    .show-catwoman #catwoman {
+      transform: translateX(0);
+      opacity: 0.7;
+    }
+
+    .section {
+      display: none;
+      padding: 20px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      padding: 15px;
+      max-width: 320px;
+      margin: 20px auto;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .nav-buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .bullet-list {
+      max-width: 600px;
+      margin: 0 auto;
+      padding-left: 0;
+      list-style-position: inside;
+    }
+
+    .bullet-list li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+      text-align: left;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      color: #888;
+      font-size: 14px;
+      padding-bottom: 40px;
+    }
+
+    .music-control {
+      margin-top: 20px;
+    }
+
+    audio {
+      margin-top: 10px;
+      width: 80%;
+    }
+
+    select {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .character {
+        position: relative;
+        transform: translateX(0) !important;
+        opacity: 0.8;
+        display: block;
+        margin: 20px auto;
+      }
+
+      #batman,
+      #catwoman {
+        left: auto !important;
+        right: auto !important;
+        display: block;
+      }
+
+      .card {
+        width: 90%;
+      }
+
+      audio {
+        width: 100%;
+      }
+
+      .gift-box {
+        transform: scale(0.8);
+      }
+    }
+
+    /* Caja de regalo animada */
+    .gift-box {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 40px auto;
+      cursor: pointer;
+      animation: bounce 2s infinite;
+      z-index: 2;
+    }
+
+    .lid {
+      width: 120px;
+      height: 30px;
+      background: #fdd835;
+      border-radius: 6px 6px 0 0;
+      position: absolute;
+      top: 0;
+      transition: transform 0.5s ease;
+      z-index: 3;
+    }
+
+    .box {
+      width: 120px;
+      height: 90px;
+      background: #ffc107;
+      border-radius: 0 0 6px 6px;
+      position: absolute;
+      top: 30px;
+      z-index: 2;
+    }
+
+    .ribbon {
+      width: 20px;
+      height: 120px;
+      background: #d32f2f;
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      z-index: 4;
+      border-radius: 6px;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .gift-opened .lid {
+      transform: rotateX(120deg) translateY(-60px);
+    }
+
+    #video-wrapper {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    #amor-container.mostrar {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    #amor-container.ocultar {
+      animation: fadeOutDown 0.3s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeOutDown {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>Licenciada Shaira (RH & Psicóloga)</header>
+
+  <div class="center" id="main-menu">
+    <img id="batman-logo" src="logo.png" alt="Batman Logo" />
+    <br />
+    <button class="button" onclick="startAnimation()">▶ Play</button>
+    <button class="button" onclick="showSection('psych')">🧠 Psicología de Batman</button>
+    <button class="button" onclick="showSection('about')">🦇 ¿Quién es Batman?</button>
+    <button class="button" onclick="showSection('more')">💼 Recursos Humanos</button>
+    <button class="button" onclick="openMinijuego()">🎮 Jugar Minijuego</button>
+    <button class="button" onclick="toggleAmor()">💗 Lo mucho que te amooo</button>
+    <button class="button" onclick="mostrarQR()">🔍 Ver en QR</button>
+    <button class="button" onclick="abrirVistaEspecial('mapa')">🗺️ Nuestro recorrido</button>
+    <button class="button" onclick="abrirCasoEspecial()">🕵️‍♀️ Caso Código Especial</button>
+
+
+    <div class="music-control">
+      <label for="music">🎵 Elige tu música:</label><br />
+      <select id="music" onchange="changeMusic(this.value)">
+        <option value="">-- Selecciona una canción --</option>
+        <option value="batman_theme.mp3">Batman Theme</option>
+        <option value="dark_knight.mp3">Dark Knight</option>
+        <option value="batman_begins.mp3">Batman Begins</option>
+      </select>
+      <audio id="player" controls></audio>
+    </div>
+  </div>
+
+  <img id="batman" class="character" src="batman.png" alt="Batman" />
+  <img id="catwoman" class="character" src="catwoman.png" alt="Catwoman" />
+
+  <div id="psych" class="section">
+    <h2 style="color:#fdd835;">🧠 Psicología de Batman</h2>
+    <ul class="bullet-list">
+      <li>El trauma infantil como origen de la identidad.</li>
+      <li>Dualidad entre Bruce Wayne y Batman: lo público vs lo íntimo.</li>
+      <li>Integración de la sombra según Carl Jung.</li>
+      <li>Resiliencia emocional y fortaleza mental.</li>
+    </ul>
+    <div class="card">
+      <img src="trauma.png" alt="Trauma" />
+      <h3>Trauma Infantil</h3>
+      <p>La pérdida de sus padres lo llevó a construir un símbolo de justicia.</p>
+    </div>
+    <div class="nav-buttons">
+      <button class="button" onclick="goBack()">⬅ Volver al inicio</button>
+    </div>
+  </div>
+
+  <div id="about" class="section">
+    <h2 style="color:#fdd835;">🦇 ¿Quién es Batman?</h2>
+    <div class="card">
+      <img src="batman.png" alt="Batman" />
+      <h3>El Caballero Oscuro</h3>
+      <p>No tiene poderes, su fuerza es su mente.<br>Utiliza el miedo como herramienta psicológica.<br>Representa la
+        justicia personal.<br>Es símbolo de disciplina y autocontrol.</p>
+    </div>
+    <div class="nav-buttons">
+      <button class="button" onclick="goBack()">⬅ Volver al inicio</button>
+    </div>
+  </div>
+
+  <div id="more" class="section">
+    <h2 style="color:#fdd835;">💼 Psicología Organizacional y RH</h2>
+    <ul class="bullet-list">
+      <li>El liderazgo de Batman como modelo de gestión.</li>
+      <li>Perfil psicológico de los aliados y villanos.</li>
+      <li>Manejo del estrés en situaciones de crisis.</li>
+      <li>Capacidad de análisis del comportamiento humano.</li>
+    </ul>
+    <div class="card">
+      <img src="dualidad.png" alt="Dualidad" />
+      <h3>Evaluación de Personal</h3>
+      <p>Detectar fortalezas, debilidades y el perfil de cada colaborador.</p>
+    </div>
+    <div class="nav-buttons">
+      <button class="button" onclick="goBack()">⬅ Volver al inicio</button>
+    </div>
+  </div>
+
+  <!-- Caja de regalo y video -->
+  <div class="center" id="gift-container">
+    <div class="gift-box" onclick="openGift()">
+      <div class="lid"></div>
+      <div class="box"></div>
+      <div class="ribbon"></div>
+    </div>
+    <div id="video-wrapper" style="display:none; margin-top: 20px;">
+      <video id="gift-video" width="100%" controls>
+        <source src="video-sorpresa.mp4" type="video/mp4" />
+        Tu navegador no soporta video HTML5.
+      </video>
+    </div>
+  </div>
+
+  <footer>Desarrollado con admiración para la Lic. Shaira 🖤</footer>
+
+  <script>
+    function startAnimation() {
+      document.getElementById("main-menu").style.display = "none";
+      document.body.classList.add("show-batman");
+      setTimeout(() => {
+        document.body.classList.add("show-catwoman");
+      }, 1000);
+      setTimeout(() => {
+        showSection('more');
+      }, 3000);
+    }
+
+    function showSection(id) {
+      document.getElementById("main-menu").style.display = "none";
+      document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = "block";
+    }
+
+    function goBack() {
+      document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+      document.getElementById("main-menu").style.display = "block";
+    }
+
+    function changeMusic(file) {
+      const player = document.getElementById('player');
+      if (file) {
+        player.src = file;
+        player.play();
+      } else {
+        player.pause();
+        player.removeAttribute("src");
+      }
+    }
+
+    function openMinijuego() {
+      // Abrir en nueva ventana/pestaña, tamaño completo
+      window.open('minijuego.html', '_blank', 'fullscreen=yes,scrollbars=no,resizable=no');
+    }
+
+
+    function openGift() {
+      const gift = document.querySelector(".gift-box");
+      const lid = document.querySelector(".lid");
+      const wrapper = document.getElementById("video-wrapper");
+      const video = document.getElementById("gift-video");
+
+      if (!gift.classList.contains("gift-opened")) {
+        gift.classList.add("gift-opened");
+        setTimeout(() => {
+          wrapper.style.display = "block";
+          video.play();
+        }, 800);
+      }
+    }
+  </script>
+
+  <script src="animaciones_amor.js"></script>
+
+  <script>
+    function toggleAmor() {
+      const existing = document.getElementById("amor-container");
+
+      if (existing) {
+        existing.classList.remove("mostrar");
+        existing.classList.add("ocultar");
+        setTimeout(() => existing.remove(), 300); // espera que termine la animación
+        return;
+      }
+
+      const container = document.createElement("div");
+      container.id = "amor-container";
+      container.classList.add("mostrar"); // animación de entrada
+      container.style.textAlign = "center";
+      container.style.marginTop = "20px";
+
+      container.innerHTML = `
+        <button class="button" onclick="abrirVistaEspecial('amor')">💞 Cuánto te amo</button>
+        <button class="button" onclick="abrirVistaEspecial('mapa')">🗺️ Nuestro recorrido</button>
+      `;
+
+      document.getElementById("main-menu").appendChild(container);
+    }
+  </script>
+
+<script>
+  function abrirCasoEspecial() {
+    window.open('caso_codigo.html', '_blank', 'noopener,noreferrer');
+  }
+</script>
+
+
+</body>
+
+</html>

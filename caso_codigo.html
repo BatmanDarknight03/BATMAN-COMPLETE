@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Caso Misterioso</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            font-family: 'Courier New', monospace;
+            color: #0f0;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+
+        .contenedor {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 60px auto;
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0f0;
+            border-radius: 15px;
+            box-shadow: 0 0 25px #0f0;
+            animation: escanear 2s infinite alternate;
+        }
+
+        @keyframes escanear {
+            from {
+                box-shadow: 0 0 20px #0f0;
+            }
+
+            to {
+                box-shadow: 0 0 40px #0f0;
+            }
+        }
+
+        h1 {
+            font-size: 1.8em;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .digitos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .digitos input {
+            width: 60px;
+            height: 80px;
+            font-size: 2em;
+            text-align: center;
+            background: black;
+            color: #0f0;
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .digitos input:disabled {
+            background: black;
+            color: #0f0;
+        }
+
+        .pistas {
+            margin-top: 20px;
+            font-size: 1em;
+            line-height: 1.6em;
+        }
+
+        .bloqueado {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .reloj {
+            font-size: 1em;
+            color: #ff0;
+            margin-top: 10px;
+        }
+
+        .final-contenido {
+            text-align: center;
+            margin-top: 60px;
+            animation: aparecer 1.5s ease forwards;
+        }
+
+        .candado {
+            width: 100px;
+            height: 120px;
+            margin: 0 auto 20px;
+            position: relative;
+            animation: abrirCandado 2s ease forwards;
+        }
+
+        #btn-regresar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #0f0;
+            color: black;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 1em;
+            z-index: 9999;
+            box-shadow: 0 0 10px #0f0;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        #btn-regresar:hover {
+            transform: scale(1.1);
+        }
+
+
+        .candado::before {
+            content: "";
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 8px solid #0f0;
+            border-radius: 50%;
+            top: -60px;
+            left: 20px;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .candado::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #0f0;
+            border-radius: 10px;
+        }
+
+        .mensaje-final {
+            font-size: 1.4em;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        @keyframes abrirCandado {
+            0% {
+                transform: scale(0.5) rotate(0deg);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2) rotate(-5deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes aparecer {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .digitos input {
+                width: 45px;
+                height: 60px;
+                font-size: 1.6em;
+            }
+
+            h1 {
+                font-size: 1.4em;
+            }
+
+            .pistas {
+                font-size: 0.95em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button id="btn-regresar" onclick="location.href='index.html'">🔙 Regresar al Inicio</button>
+
+
+    <canvas id="binario"></canvas>
+
+    <div class="contenedor" id="contenedor">
+        <h1>Caso: "Código Romántico Secreto"</h1>
+        <div class="reloj" id="reloj"></div>
+
+        <div class="digitos">
+            <input maxlength="1" id="d1">
+            <input maxlength="1" id="d2" disabled>
+            <input maxlength="1" id="d3">
+            <input maxlength="1" id="d4" disabled>
+            <input maxlength="1" id="d5">
+        </div>
+
+        <div class="pistas" id="pistas">
+            <p><strong>1️⃣:</strong> Numero del mes que entraste a trabajar y nos conocimos</p>
+            <p><strong>2️⃣:</strong> Número automático, pero no te confundas 😉</p>
+            <p><strong>3️⃣:</strong> Día del mes que cumplo años, pista: Marzo</p>
+            <p><strong>4️⃣:</strong> Otro número loco automático</p>
+            <p><strong>5️⃣:</strong> Tercer letra de mi primer nombre</p>
+        </div>
+
+        <div class="bloqueado" id="mensaje"></div>
+    </div>
+
+    <script>
+        const codigoCorrecto = ['4', null, '3', null, 'C'];
+        const inputs = [
+            document.getElementById("d1"),
+            document.getElementById("d2"),
+            document.getElementById("d3"),
+            document.getElementById("d4"),
+            document.getElementById("d5")
+        ];
+        const mensaje = document.getElementById("mensaje");
+        const intentos = [0, 0, 0, 0, 0];
+        const bloqueado = [false, false, false, false, false];
+        const finalContainer = document.getElementById("contenedor");
+
+        // Inputs automáticos (2do y 4to)
+        function actualizarAutoInputs() {
+            [1, 3].forEach(i => {
+                inputs[i].value = Math.floor(Math.random() * 10).toString();
+            });
+        }
+        actualizarAutoInputs();
+        setInterval(actualizarAutoInputs, 7000);
+
+        // Validación automática
+        [0, 2, 4].forEach(i => {
+            inputs[i].addEventListener("input", () => {
+                if (bloqueado[i]) return;
+                const val = inputs[i].value.toUpperCase();
+                const correcto = codigoCorrecto[i].toUpperCase();
+
+                if (val === correcto) {
+                    inputs[i].style.borderColor = "#0f0";
+                    inputs[i].style.color = "#0f0";
+                    inputs[i].disabled = true;
+                    mensaje.innerHTML = "";
+                    verificarFinal();
+                } else {
+                    inputs[i].style.borderColor = "red";
+                    inputs[i].style.color = "red";
+                    inputs[i].value = "";
+                    intentos[i]++;
+                    mensaje.innerHTML = `❌ Fallaste en el cuadro ${i + 1} (${intentos[i]}/3)`;
+
+                    if (intentos[i] >= 3) {
+                        bloqueado[i] = true;
+                        mensaje.innerHTML = `⏳ Bloqueado en el cuadro ${i + 1} por 30s`;
+                        setTimeout(() => {
+                            bloqueado[i] = false;
+                            intentos[i] = 0;
+                            mensaje.innerHTML = "";
+                        }, 30000);
+                    }
+                }
+            });
+        });
+
+        function verificarFinal() {
+            if (inputs[0].disabled && inputs[2].disabled && inputs[4].disabled) {
+                finalContainer.innerHTML = `
+          <div class="final-contenido">
+            <div class="candado"></div>
+            <div class="mensaje-final">
+              🔓 Mi amor, ya puedes abrir la sorpresa...<br>
+              Felicidades por resolver el caso 💖
+            </div>
+          </div>
+        `;
+            }
+        }
+
+        // Temporizador
+        const reloj = document.getElementById("reloj");
+        const tiempoLimite = new Date().getTime() + 72 * 60 * 60 * 1000;
+        setInterval(() => {
+            const ahora = new Date().getTime();
+            const restante = tiempoLimite - ahora;
+            if (restante < 0) {
+                reloj.innerHTML = '<span style="color:red">⏰ Caso cerrado. Tiempo agotado.</span>';
+            } else {
+                const h = Math.floor((restante % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((restante % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((restante % (1000 * 60)) / 1000);
+                reloj.innerHTML = `Tiempo restante: ${h}h ${m}m ${s}s`;
+            }
+        }, 1000);
+
+        // Fondo binario
+        const canvas = document.getElementById('binario');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const columnas = Math.floor(canvas.width / 20);
+        const gotas = Array(columnas).fill(1);
+        function dibujarBinario() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0f0";
+            ctx.font = "20px Courier New";
+            for (let i = 0; i < gotas.length; i++) {
+                const texto = Math.round(Math.random()) ? "1" : "0";
+                ctx.fillText(texto, i * 20, gotas[i] * 20);
+                if (gotas[i] * 20 > canvas.height || Math.random() > 0.95) gotas[i] = 0;
+                gotas[i]++;
+            }
+            requestAnimationFrame(dibujarBinario);
+        }
+        dibujarBinario();
+
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+
+</html>

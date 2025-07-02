@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amor Infinito</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+      background: radial-gradient(circle at bottom, #000014 0%, #0a0a1a 80%, #000000 100%);
+      color: white;
+      text-align: center;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+    }
+    .corazon {
+      position: absolute;
+      font-size: 3em;
+      animation: flotar 6s linear infinite;
+      opacity: 0.7;
+      z-index: 2;
+    }
+    @keyframes flotar {
+      0% { transform: translateY(100vh); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(-100vh); opacity: 0; }
+    }
+    .titulo {
+      font-size: 3em;
+      margin-top: 60px;
+      text-shadow: 0 0 15px #f50057;
+      z-index: 2;
+      position: relative;
+    }
+    .subtitulo {
+      font-size: 1.4em;
+      color: #ccc;
+      margin-top: 10px;
+      text-shadow: 0 0 10px #888;
+      z-index: 2;
+      position: relative;
+    }
+    .barra {
+      width: 80%;
+      height: 25px;
+      margin: 40px auto;
+      background: #ffffff33;
+      border-radius: 30px;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+    }
+    .barra div {
+      height: 100%;
+      background: linear-gradient(to right, #ff4081, #ff80ab);
+      width: 0%;
+    }
+    .cerrar {
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1em;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 40px;
+      z-index: 2;
+      position: relative;
+    }
+    .sorpresa {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #fff;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      color: #fff;
+      z-index: 99;
+      backdrop-filter: blur(10px);
+      animation: sorpresaAnim 2s forwards ease-out;
+    }
+    .sorpresa h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px #ff4081;
+    }
+    .sorpresa img {
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #ff80ab;
+    }
+    .sorpresa .boton-volver {
+      margin-top: 25px;
+      padding: 10px 25px;
+      font-size: 1em;
+      background: #f50057;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #f50057;
+    }
+    .sorpresa .boton-volver:hover {
+      background: #ff80ab;
+    }
+    @keyframes sorpresaAnim {
+      to {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+    @media (max-width: 768px) {
+      .titulo { font-size: 2em; }
+      .subtitulo { font-size: 1em; }
+      .barra { width: 90%; }
+      .sorpresa h1 { font-size: 1.5em; }
+      .sorpresa img { max-width: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="estrellas"></canvas>
+  <div class="titulo">Mi amor por ti no tiene límites 💖</div>
+  <div class="subtitulo">Y crece con cada pensamiento, cada mirada, cada palabra contigo 🧠✨</div>
+  <div class="barra"><div id="barraProgreso"></div></div>
+  <button class="cerrar" onclick="window.close()">Cerrar</button>
+
+  <script>
+    function crearCorazon() {
+      const corazon = document.createElement('div');
+      corazon.classList.add('corazon');
+      corazon.innerText = ['💖','💗','💘','💝','❤️','💓','💞'][Math.floor(Math.random()*7)];
+      corazon.style.left = Math.random() * 100 + 'vw';
+      corazon.style.top = '100vh';
+      document.body.appendChild(corazon);
+      setTimeout(() => corazon.remove(), 6000);
+    }
+    setInterval(crearCorazon, 300);
+
+    const canvas = document.getElementById('estrellas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const estrellas = Array.from({length: 200}).map(() => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5,
+      alpha: Math.random(),
+      dx: Math.random() * 0.3,
+    }));
+
+    function dibujarEstrellas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      estrellas.forEach(e => {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgba(255,255,255,${e.alpha})`;
+        ctx.fill();
+        e.x += e.dx;
+        if (e.x > canvas.width) e.x = 0;
+      });
+      requestAnimationFrame(dibujarEstrellas);
+    }
+    dibujarEstrellas();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Progreso animado con sorpresa
+    const barra = document.getElementById("barraProgreso");
+    let progreso = 0;
+    const intervalo = setInterval(() => {
+      progreso += 1;
+      barra.style.width = progreso + "%";
+      if (progreso >= 100) {
+        clearInterval(intervalo);
+        mostrarSorpresa();
+      }
+    }, 60);
+
+    function mostrarSorpresa() {
+      const sorpresa = document.createElement("div");
+      sorpresa.className = "sorpresa";
+      sorpresa.innerHTML = `
+        <h1>🎇 ¡Te Amo Más de lo que las palabras pueden decir! 💕</h1>
+        <img src="https://media.giphy.com/media/26xBwdIuRJiAIqHwA/giphy.gif" alt="Amor">
+        <br>
+        <button class="boton-volver" onclick="window.close()">⬅ Regresar</button>
+      `;
+      document.body.appendChild(sorpresa);
+    }
+  </script>
+</body>
+</html>

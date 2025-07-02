@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minijuego con control móvil y monos</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(to top, #87ceeb 0%, #e0f7ff 100%);
+      overflow: hidden;
+      user-select: none;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background-color: #a0d8f7;
+      border: 3px solid #333;
+    }
+    #startBtn {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 25px;
+      font-size: 20px;
+      background-color: #0099ff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      z-index: 100;
+    }
+    #message {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: #222;
+      text-shadow: 1px 1px 1px #fff;
+      user-select: none;
+      z-index: 100;
+      display: none;
+    }
+    /* Controles móviles */
+    #mobileControls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 10px;
+      z-index: 1000;
+    }
+    .control-btn {
+      width: 60px;
+      height: 60px;
+      background-color: #0099ffcc;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 1px 1px 5px #003366aa;
+    }
+    .goal-text {
+      display: none;
+      position: absolute;
+      color: #c71585;
+      font-size: 20px;
+      font-family: 'Arial Black', sans-serif;
+      text-align: center;
+      z-index: 50;
+    }
+    /* Botones de nivel completado */
+    #levelCompleteButtons {
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 15px;
+      z-index: 100;
+    }
+    .level-btn {
+      padding: 12px 25px;
+      font-size: 18px;
+      background-color: #0099ff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .level-btn:hover {
+      background-color: #0077cc;
+    }
+  </style>
+</head>
+<body>
+  <button id="startBtn" disabled>Iniciar Juego</button>
+  <div id="message"></div>
+  <div id="levelCompleteButtons">
+    <button id="nextLevelBtn" class="level-btn">Siguiente Nivel</button>
+    <button id="restartBtn" class="level-btn">Reiniciar</button>
+  </div>
+  <!-- Canvas del juego -->
+  <canvas id="gameCanvas" width="800" height="450"></canvas>
+  <!-- Texto del corazón (fuera del canvas para controlar visibilidad) -->
+  <div id="goalText" class="goal-text">Corazón de mi novia Shaira</div>
+  <!-- Controles móviles -->
+  <div id="mobileControls">
+    <button id="leftBtn" class="control-btn">←</button>
+    <button id="rightBtn" class="control-btn">→</button>
+    <button id="upBtn" class="control-btn">↑</button>
+    <button id="jumpBtn" class="control-btn">⤴</button>
+  </div>
+  <script>
+    (() => {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const startBtn = document.getElementById('startBtn');
+      const message = document.getElementById('message');
+      const goalText = document.getElementById('goalText');
+      const levelCompleteButtons = document.getElementById('levelCompleteButtons');
+      const nextLevelBtn = document.getElementById('nextLevelBtn');
+      const restartBtn = document.getElementById('restartBtn');
+
+      const mobileControls = document.getElementById('mobileControls');
+      const leftBtn = document.getElementById('leftBtn');
+      const rightBtn = document.getElementById('rightBtn');
+      const upBtn = document.getElementById('upBtn');
+      const jumpBtn = document.getElementById('jumpBtn');
+
+      const GRAVITY = 0.6;
+      const FRICTION = 0.8;
+
+      let player, enemy, platforms, ladders, goal;
+      let keys = {};
+      let gameRunning = false;
+      let currentLevel = 0;
+      
+      // Definición de niveles
+      const levels = [
+        {
+          platforms: [
+            { x: 0, y: 430, width: 800, height: 20 }, // suelo
+            { x: 100, y: 350, width: 150, height: 15 },
+            { x: 300, y: 280, width: 120, height: 15 },
+            { x: 480, y: 320, width: 150, height: 15 },
+            { x: 650, y: 260, width: 120, height: 15 },
+            { x: 500, y: 170, width: 180, height: 15 },
+            { x: 250, y: 120, width: 130, height: 15 },
+          ],
+          ladders: [
+            { x: 320, y: 280, width: 30, height: 70 },
+            { x: 690, y: 260, width: 30, height: 160 },
+            { x: 270, y: 120, width: 30, height: 210 },
+          ],
+          goal: { x: 700, y: 90, width: 40, height: 50 },
+          enemyStartPositions: [
+            { x: 700, y: 0 },
+            { x: 400, y: 350 },
+            { x: 200, y: 280 }
+          ]
+        },
+        {
+          platforms: [
+            { x: 0, y: 430, width: 800, height: 20 }, // suelo
+            { x: 150, y: 350, width: 100, height: 15 },
+            { x: 350, y: 300, width: 100, height: 15 },
+            { x: 550, y: 250, width: 100, height: 15 },
+            { x: 200, y: 200, width: 100, height: 15 },
+            { x: 400, y: 150, width: 100, height: 15 },
+            { x: 600, y: 100, width: 100, height: 15 },
+          ],
+          ladders: [
+            { x: 180, y: 350, width: 30, height: 80 },
+            { x: 380, y: 300, width: 30, height: 100 },
+            { x: 580, y: 250, width: 30, height: 150 },
+            { x: 230, y: 200, width: 30, height: 230 },
+          ],
+          goal: { x: 650, y: 50, width: 40, height: 50 },
+          enemyStartPositions: [
+            { x: 50, y: 0 },
+            { x: 300, y: 300 },
+            { x: 600, y: 250 }
+          ]
+        },
+        {
+          platforms: [
+            { x: 0, y: 430, width: 800, height: 20 }, // suelo
+            { x: 100, y: 380, width: 80, height: 15 },
+            { x: 250, y: 330, width: 80, height: 15 },
+            { x: 400, y: 280, width: 80, height: 15 },
+            { x: 550, y: 230, width: 80, height: 15 },
+            { x: 700, y: 180, width: 80, height: 15 },
+            { x: 200, y: 130, width: 80, height: 15 },
+            { x: 350, y: 80, width: 80, height: 15 },
+            { x: 500, y: 30, width: 80, height: 15 },
+          ],
+          ladders: [
+            { x: 130, y: 380, width: 30, height: 50 },
+            { x: 280, y: 330, width: 30, height: 50 },
+            { x: 430, y: 280, width: 30, height: 50 },
+            { x: 580, y: 230, width: 30, height: 50 },
+            { x: 730, y: 180, width: 30, height: 50 },
+            { x: 230, y: 130, width: 30, height: 50 },
+            { x: 380, y: 80, width: 30, height: 50 },
+          ],
+          goal: { x: 550, y: 0, width: 40, height: 50 },
+          enemyStartPositions: [
+            { x: 50, y: 0 },
+            { x: 300, y: 330 },
+            { x: 600, y: 230 },
+            { x: 200, y: 130 }
+          ]
+        }
+      ];
+
+      // Imágenes de monos (reemplaza las URLs con tus imágenes)
+      const images = {
+        player: new Image(),
+        enemy: new Image(),
+        goal: new Image(),
+        monitoCorazon: new Image(),
+      };
+      images.player.src = 'player.png';      // monito jugador
+      images.enemy.src = 'enemy.png';        // monito enemigo rojo
+      images.goal.src = 'goal.png';          // meta (corazón)
+      images.monitoCorazon.src = 'side.png'; // monito al lado del corazón
+
+      // Pre-carga de imágenes
+      let loadedImages = 0;
+      const totalImages = Object.keys(images).length;
+      for (const key in images) {
+        images[key].onload = () => {
+          loadedImages++;
+          if (loadedImages === totalImages) {
+            // Habilitar el botón de iniciar juego cuando todas las imágenes estén cargadas
+            startBtn.disabled = false;
+          }
+        };
+        images[key].onerror = () => {
+          console.error("Error cargando la imagen: " + images[key].src);
+        };
+      }
+
+      // --- Entidades ---
+      function createPlayer() {
+        return {
+          x: 50,
+          y: 0,
+          width: 40,
+          height: 50,
+          velX: 0,
+          velY: 0,
+          speed: 4,
+          jumping: false,
+          onLadder: false,
+          onGround: false,
+          climbing: false,
+        };
+      }
+      
+      function createEnemy() {
+        const levelData = levels[currentLevel];
+        const randomPos = levelData.enemyStartPositions[
+          Math.floor(Math.random() * levelData.enemyStartPositions.length)
+        ];
+        
+        return {
+          x: randomPos.x,
+          y: randomPos.y,
+          width: 40,
+          height: 50,
+          velX: 0,
+          velY: 0,
+          speed: 2,
+          jumping: false,
+          onGround: false,
+          jumpCooldown: 0,
+          directionChangeCooldown: 0,
+        };
+      }
+      
+      // Inicializar juego
+      function resetGame() {
+        player = createPlayer();
+        enemy = createEnemy();
+        platforms = levels[currentLevel].platforms;
+        ladders = levels[currentLevel].ladders;
+        goal = levels[currentLevel].goal;
+        message.style.display = 'none';
+        goalText.style.display = 'none';
+        levelCompleteButtons.style.display = 'none';
+      }
+      
+      // Detectar colisión AABB (rectángulo) - solo para ganar/perder
+      function isColliding(a, b) {
+        return !(
+          a.x + a.width < b.x ||
+          a.x > b.x + b.width ||
+          a.y + a.height < b.y ||
+          a.y > b.y + b.height
+        );
+      }
+      
+      // Ver si entidad está sobre una plataforma
+      function onPlatform(entity) {
+        for (const p of platforms) {
+          if (
+            entity.x + entity.width > p.x &&
+            entity.x < p.x + p.width &&
+            entity.y + entity.height >= p.y &&
+            entity.y + entity.height <= p.y + 20 &&
+            entity.velY >= 0
+          ) {
+            return p.y;
+          }
+        }
+        return null;
+      }
+      
+      // Ver si está en una escalera
+      function onLadderCheck(entity) {
+        for (const l of ladders) {
+          if (
+            entity.x + entity.width > l.x &&
+            entity.x < l.x + l.width &&
+            entity.y + entity.height > l.y &&
+            entity.y < l.y + l.height
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+      
+      // Ver si está en la parte superior de una escalera
+      function onTopOfLadder(entity) {
+        for (const l of ladders) {
+          if (
+            entity.x + entity.width > l.x &&
+            entity.x < l.x + l.width &&
+            Math.abs(entity.y + entity.height - l.y) < 10
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+      
+      // Actualizar jugador con física y controles
+      function updatePlayer() {
+        // Movimiento horizontal
+        if ((keys['ArrowLeft'] || keys['a'] || keys['leftBtn'])) {
+          player.velX = -player.speed;
+        } else if ((keys['ArrowRight'] || keys['d'] || keys['rightBtn'])) {
+          player.velX = player.speed;
+        } else {
+          player.velX *= FRICTION;
+          if (Math.abs(player.velX) < 0.1) player.velX = 0;
+        }
+        
+        // Salto y subir/bajar escaleras
+        if ((keys['ArrowUp'] || keys['w'] || keys['upBtn'])) {
+          if (player.onLadder) {
+            player.velY = -player.speed; // subir escalera
+            player.climbing = true;
+          } else if (!player.jumping && player.onGround) {
+            player.velY = -12;
+            player.jumping = true;
+            player.onGround = false;
+          }
+        } else if ((keys['ArrowDown'] || keys['s'])) {
+          if (player.onLadder) {
+            player.velY = player.speed; // bajar escalera
+            player.climbing = true;
+          }
+        } else if (player.onLadder && player.climbing) {
+          player.velY = 0;
+        }
+        
+        // Salto con botón jump (solo en móvil)
+        if (keys['jumpBtn'] && !player.jumping && player.onGround && !player.onLadder) {
+          player.velY = -12;
+          player.jumping = true;
+          player.onGround = false;
+        }
+        
+        // Aplicar gravedad si no está en escalera o si está en la parte superior y no está subiendo
+        if (!player.onLadder || (onTopOfLadder(player) && !player.climbing)) {
+          player.velY += GRAVITY;
+        }
+        
+        // Aplicar velocidades
+        player.x += player.velX;
+        player.y += player.velY;
+        
+        // Límites de pantalla
+        if (player.x < 0) player.x = 0;
+        if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        if (player.y + player.height > canvas.height) {
+          player.y = canvas.height - player.height;
+          player.velY = 0;
+          player.jumping = false;
+          player.onGround = true;
+        }
+        
+        // Detectar plataforma
+        const platY = onPlatform(player);
+        if (platY !== null) {
+          player.y = platY - player.height;
+          player.velY = 0;
+          player.jumping = false;
+          player.onGround = true;
+          player.climbing = false;
+        } else if (!player.onLadder && player.y + player.height < canvas.height) {
+          player.onGround = false;
+        }
+        
+        // Detectar escalera
+        player.onLadder = onLadderCheck(player);
+        
+        // Si no está presionando arriba/abajo y está en el suelo, dejar de escalar
+        if ((!keys['ArrowUp'] && !keys['w'] && !keys['upBtn'] && 
+             !keys['ArrowDown'] && !keys['s']) && player.onGround) {
+          player.climbing = false;
+        }
+      }
+      
+      // Actualizar enemigo con IA mejorada
+      function updateEnemy() {
+        // Seguir al jugador con cooldown para cambios de dirección
+        enemy.directionChangeCooldown--;
+        
+        if (enemy.directionChangeCooldown <= 0) {
+          // Cambiar dirección solo si hay una diferencia significativa en la posición
+          const xDiff = player.x - enemy.x;
+          const yDiff = player.y - enemy.y;
+          
+          // Seguir horizontalmente
+          if (Math.abs(xDiff) > 20) {
+            enemy.velX = xDiff > 0 ? enemy.speed : -enemy.speed;
+          } else {
+            enemy.velX = 0;
+          }
+          
+          // Lógica de salto mejorada
+          enemy.jumpCooldown--;
+          
+          // Saltar si el jugador está arriba y está en el suelo
+          if (enemy.onGround && enemy.jumpCooldown <= 0 && yDiff < -30 && Math.abs(xDiff) < 150) {
+            enemy.velY = -10;
+            enemy.jumping = true;
+            enemy.onGround = false;
+            enemy.jumpCooldown = 60;
+          }
+          
+          // Cambiar dirección aleatoriamente a veces
+          if (Math.random() < 0.02) {
+            enemy.velX = Math.random() < 0.5 ? enemy.speed : -enemy.speed;
+            enemy.directionChangeCooldown = 30;
+          }
+        }
+        
+        // Aplicar gravedad si no está en el suelo
+        if (!enemy.onGround) {
+          enemy.velY += GRAVITY;
+        }
+        
+        // Aplicar velocidades
+        enemy.x += enemy.velX;
+        enemy.y += enemy.velY;
+        
+        // Límites de pantalla
+        if (enemy.x < 0) enemy.x = 0;
+        if (enemy.x + enemy.width > canvas.width) enemy.x = canvas.width - enemy.width;
+        if (enemy.y + enemy.height > canvas.height) {
+          enemy.y = canvas.height - enemy.height;
+          enemy.velY = 0;
+          enemy.onGround = true;
+        }
+        
+        // Detectar plataforma
+        const platY = onPlatform(enemy);
+        if (platY !== null) {
+          enemy.y = platY - enemy.height;
+          enemy.velY = 0;
+          enemy.onGround = true;
+          enemy.jumping = false;
+        } else {
+          enemy.onGround = false;
+        }
+      }
+      
+      // Dibujar plataformas
+      function drawPlatforms() {
+        ctx.fillStyle = '#7B4F24';
+        for (const p of platforms) {
+          ctx.fillRect(p.x, p.y, p.width, p.height);
+        }
+      }
+      
+      // Dibujar escaleras
+      function drawLadders() {
+        ctx.fillStyle = '#FFD700';
+        for (const l of ladders) {
+          const stepHeight = 10;
+          const steps = Math.floor(l.height / stepHeight);
+          for (let i = 0; i < steps; i++) {
+            ctx.fillRect(l.x, l.y + i * stepHeight, l.width, stepHeight - 2);
+          }
+        }
+      }
+      
+      // Dibujar jugador, enemigo y meta con imágenes
+      function drawEntities() {
+        ctx.drawImage(images.player, player.x, player.y, player.width, player.height);
+        ctx.drawImage(images.enemy, enemy.x, enemy.y, enemy.width, enemy.height);
+        ctx.drawImage(images.goal, goal.x, goal.y, goal.width, goal.height);
+        const monitoX = goal.x + goal.width + 10;
+        const monitoY = goal.y + goal.height - 40;
+        ctx.drawImage(images.monitoCorazon, monitoX, monitoY, 40, 50);
+        
+        // Posicionar el texto del corazón
+        goalText.style.left = (goal.x + goal.width / 2 + 20) + 'px';
+        goalText.style.top = (goal.y - 10) + 'px';
+        
+        // Mostrar número de nivel
+        ctx.fillStyle = '#000';
+        ctx.font = '20px Arial';
+        ctx.fillText(`Nivel ${currentLevel + 1}`, 20, 30);
+      }
+      
+      // Mostrar mensaje de nivel completado
+      function showLevelComplete() {
+        message.textContent = `¡Nivel ${currentLevel + 1} completado!`;
+        message.style.display = 'block';
+        goalText.style.display = 'block';
+        levelCompleteButtons.style.display = 'flex';
+        gameRunning = false;
+        hideMobileControls();
+      }
+      
+      // Detectar ganar
+      function checkWin() {
+        if (isColliding(player, goal)) {
+          showLevelComplete();
+        }
+      }
+      
+      // Detectar perder
+      function checkLose() {
+        if (isColliding(player, enemy)) {
+          message.textContent = '¡Te atraparon! Presiona Iniciar para intentar de nuevo.';
+          message.style.display = 'block';
+          goalText.style.display = 'block';
+          gameRunning = false;
+          startBtn.disabled = false;
+          hideMobileControls();
+        }
+        if (player.y > canvas.height) {
+          message.textContent = '¡Te caíste! Presiona Iniciar para intentar de nuevo.';
+          message.style.display = 'block';
+          goalText.style.display = 'block';
+          gameRunning = false;
+          startBtn.disabled = false;
+          hideMobileControls();
+        }
+      }
+      
+      // Bucle principal del juego
+      function gameLoop() {
+        if (!gameRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updatePlayer();
+        updateEnemy();
+        drawPlatforms();
+        drawLadders();
+        drawEntities();
+        checkWin();
+        checkLose();
+        requestAnimationFrame(gameLoop);
+      }
+      
+      // Detectar dispositivo móvil
+      function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      }
+      
+      // Mostrar/ocultar controles móviles
+      function showMobileControls() {
+        mobileControls.style.display = 'flex';
+      }
+      
+      function hideMobileControls() {
+        mobileControls.style.display = 'none';
+      }
+      
+      // Manejo de teclas y botones
+      window.addEventListener('keydown', e => {
+        keys[e.key] = true;
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+          e.preventDefault();
+        }
+      });
+      
+      window.addEventListener('keyup', e => {
+        keys[e.key] = false;
+      });
+      
+      // Botones táctiles
+      function setupMobileButton(btn, keyName) {
+        btn.addEventListener('touchstart', e => {
+          e.preventDefault();
+          keys[keyName] = true;
+        });
+        btn.addEventListener('touchend', e => {
+          e.preventDefault();
+          keys[keyName] = false;
+        });
+        btn.addEventListener('touchcancel', e => {
+          e.preventDefault();
+          keys[keyName] = false;
+        });
+      }
+      
+      setupMobileButton(leftBtn, 'leftBtn');
+      setupMobileButton(rightBtn, 'rightBtn');
+      setupMobileButton(upBtn, 'upBtn');
+      setupMobileButton(jumpBtn, 'jumpBtn');
+      
+      // Iniciar juego
+      function startGame() {
+        resetGame();
+        gameRunning = true;
+        startBtn.disabled = true;
+        if (isMobileDevice()) { 
+          showMobileControls();
+        } else {
+          hideMobileControls();
+        }
+        gameLoop();
+      }
+      
+      startBtn.addEventListener('click', startGame);
+      
+      // Botón siguiente nivel
+      nextLevelBtn.addEventListener('click', () => {
+        if (currentLevel < levels.length - 1) {
+          currentLevel++;
+          startGame();
+        } else {
+          message.textContent = '¡Felicidades! Has completado todos los niveles.';
+          levelCompleteButtons.style.display = 'none';
+          startBtn.disabled = false;
+        }
+      });
+      
+      // Botón reiniciar
+      restartBtn.addEventListener('click', () => {
+        startGame();
+      });
+      
+      // Inicialmente ocultar controles móviles
+      hideMobileControls();
+    })();
+  </script>
+</body>
+</html>

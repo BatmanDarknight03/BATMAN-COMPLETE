@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recorrido Romántico</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0d0d0d, #1a1a1a);
+      color: white;
+      overflow: hidden;
+    }
+    #mapa {
+      width: 100vw;
+      height: 100vh;
+      background: url('mapa_fondo.jpg') center center / cover no-repeat;
+      position: relative;
+    }
+    .punto {
+      width: 24px;
+      height: 24px;
+      background: radial-gradient(#fdd835, #ffc107);
+      border: 2px solid white;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+      animation: pulso 2s infinite;
+      transition: transform 0.3s;
+    }
+    .punto:hover {
+      transform: scale(1.5);
+    }
+    @keyframes pulso {
+      0%, 100% { box-shadow: 0 0 10px #fdd835; }
+      50% { box-shadow: 0 0 20px #ffc107; }
+    }
+    .popup {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 25px;
+      border-radius: 15px;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 0 25px #fdd835;
+      z-index: 9999;
+      animation: fadeIn 0.5s ease-out;
+    }
+    .popup img {
+      max-width: 90vw;
+      max-height: 60vh;
+      width: auto;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 12px #fff;
+      display: block;
+      margin: 0 auto;
+    }
+    .popup p {
+      margin-top: 12px;
+      font-size: 18px;
+      text-align: center;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -30px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .cerrar {
+      background: #fdd835;
+      border: none;
+      padding: 10px 25px;
+      margin-top: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #000;
+      transition: background 0.3s;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cerrar:hover {
+      background: #ffee58;
+    }
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .boton-regreso {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #f50057;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 10000;
+      box-shadow: 0 0 15px #f50057;
+      animation: latido 1.5s infinite;
+    }
+    @keyframes latido {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    #amor-final {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(ellipse at center, #1a237e 0%, #0d0d0d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 10001;
+      display: none;
+      animation: fadeIn 2s ease;
+      text-align: center;
+      padding: 20px;
+    }
+    #amor-final h1 {
+      font-size: 3em;
+      color: #fdd835;
+      text-shadow: 0 0 20px #fff;
+      margin-bottom: 30px;
+    }
+    .estrella {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      animation: estrella 3s linear infinite;
+    }
+    @keyframes estrella {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+    }
+    .boton-volver-final {
+      background: #f50057;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 0 15px #f50057;
+      animation: latido 2s infinite;
+    }
+    @media (max-width: 768px) {
+      .punto { width: 18px; height: 18px; }
+      .popup { padding: 15px; font-size: 14px; max-height: 90vh; }
+      .cerrar { font-size: 14px; padding: 8px 16px; }
+      .boton-regreso, .boton-volver-final { font-size: 14px; padding: 10px 18px; }
+      #amor-final h1 { font-size: 2em; text-align: center; }
+      .popup img { max-height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+  <div id="mapa">
+    <svg id="lineas"></svg>
+    <div class="punto" style="top: 60%; left: 10%;" data-img="foto1.jpg" data-texto="Nuestro primer hola 💌"></div>
+    <div class="punto" style="top: 50%; left: 30%;" data-img="foto2.jpg" data-texto="Nuestra primera cita 💕"></div>
+    <div class="punto" style="top: 40%; left: 55%;" data-img="foto3.jpg" data-texto="Mi primer marquita 😘"></div>
+    <div class="punto" style="top: 25%; left: 80%;" data-img="foto4.jpg" data-texto="Nuestro mayor deseo ✨"></div>
+  </div>
+
+  <button class="boton-regreso" onclick="regresarInicio()">⬅ Regresar al inicio</button>
+
+  <div id="amor-final">
+    <h1>¡Te amo para siempre! 💖</h1>
+    <button class="boton-volver-final" onclick="regresarInicio()">⬅ Volver al inicio</button>
+    <canvas id="corazones" width="300" height="300"></canvas>
+  </div>
+
+  <script>
+    const puntos = Array.from(document.querySelectorAll('.punto'));
+    const svg = document.getElementById('lineas');
+    const final = document.getElementById('amor-final');
+
+    function dibujarLinea(p1, p2, delay) {
+      const r1 = p1.getBoundingClientRect();
+      const r2 = p2.getBoundingClientRect();
+      const svgRect = svg.getBoundingClientRect();
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", r1.left + 12 - svgRect.left);
+      line.setAttribute("y1", r1.top + 12 - svgRect.top);
+      line.setAttribute("x2", r1.left + 12 - svgRect.left);
+      line.setAttribute("y2", r1.top + 12 - svgRect.top);
+      line.setAttribute("stroke", "#fdd835");
+      line.setAttribute("stroke-width", "4");
+      line.setAttribute("stroke-linecap", "round");
+      svg.appendChild(line);
+
+      setTimeout(() => {
+        line.setAttribute("x2", r2.left + 12 - svgRect.left);
+        line.setAttribute("y2", r2.top + 12 - svgRect.top);
+        line.style.transition = "x2 2s ease, y2 2s ease";
+      }, delay);
+    }
+
+    puntos.forEach((p, i) => {
+      p.addEventListener('click', () => mostrarPopup(p.dataset.img, p.dataset.texto));
+      if (i > 0) dibujarLinea(puntos[i - 1], p, 800 * i);
+      if (i === puntos.length - 1) {
+        p.addEventListener('click', () => {
+          setTimeout(() => mostrarFinal(), 4000); // Espera 4 segundos
+        });
+      }
+    });
+
+    function mostrarPopup(img, texto) {
+      const popup = document.createElement('div');
+      popup.className = 'popup';
+      popup.innerHTML = `
+        <img src="${img}" alt="foto">
+        <p>${texto}</p>
+        <button class="cerrar" onclick="this.parentElement.remove()">Cerrar</button>`;
+      document.body.appendChild(popup);
+    }
+
+    function regresarInicio() {
+      window.close(); // O reemplaza por: window.location.href = "index.html";
+    }
+
+    function mostrarFinal() {
+      final.style.display = 'flex';
+      for (let i = 0; i < 100; i++) {
+        const estrella = document.createElement('div');
+        estrella.className = 'estrella';
+        estrella.style.left = Math.random() * 100 + 'vw';
+        estrella.style.top = '-' + (Math.random() * 100) + 'px';
+        estrella.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        final.appendChild(estrella);
+      }
+    }
+  </script>
+</body>
+</html>
